@@ -2,7 +2,7 @@ import { createAction } from 'redux-actions';
 import { snakeCase } from 'lodash';
 import * as constants from './constants';
 
-const actionName = (namespace, identifier, action, status) =>
+export const actionName = (namespace, identifier, action, status) =>
   `@${namespace}/${action}_${snakeCase(identifier)}_${status}`.toUpperCase();
 
 const genericAction = (namespace, identifier, action, status) =>
@@ -12,7 +12,7 @@ const actionStatusFunction = (status) =>
   (namespace, identifier, action) =>
     genericAction(namespace, identifier, action, status);
 
-export const asyncRequest = (method, namespace, identifier, func) => {
+export const asyncRequest = (action, namespace, identifier, func) => {
   const [
     requestStart,
     requestSuccess,
@@ -21,7 +21,7 @@ export const asyncRequest = (method, namespace, identifier, func) => {
     actionStatusFunction(constants.STATUS_START),
     actionStatusFunction(constants.STATUS_SUCCESS),
     actionStatusFunction(constants.STATUS_ERROR)
-  ].map((fn) => fn(namespace, identifier, method));
+  ].map((fn) => fn(namespace, identifier, action));
 
   return (...params) => (dispatch) => {
     dispatch(requestStart());
@@ -42,15 +42,15 @@ const createAsyncRequestByActionType = (actionType) =>
   (namespace, identifier, fn) =>
     asyncRequest(actionType, namespace, identifier, fn);
 
-const createResetAction = (actionType) =>
-  (namespace, identifier) =>
-    actionStatusFunction(constants.STATUS_RESET)(namespace, identifier, actionType);
+const createResetAction = () =>
+  (namespace, identifier) => {
+    const action = actionStatusFunction(constants.STATUS_SUCCESS)(namespace, identifier, constants.ACTION_RESET);
+    return () => (dispatch) => dispatch(action());
+  };
+
+
 
 export const getById = createAsyncRequestByActionType(constants.ACTION_FETCH);
-export const resetItem = createResetAction(constants.ACTION_FETCH);
-
 export const getList = createAsyncRequestByActionType(constants.ACTION_LIST);
-export const resetList = createResetAction(constants.ACTION_LIST);
-
-export const postData = createAsyncRequestByActionType(constants.ACTION_POST);
-export const resetPostData = createResetAction(constants.ACTION_POST);
+export const mutate = createAsyncRequestByActionType(constants.ACTION_MUTATE);
+export const reset = createResetAction();

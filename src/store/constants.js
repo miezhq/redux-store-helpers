@@ -1,11 +1,11 @@
 export const STATUS_START = 'START';
 export const STATUS_SUCCESS = 'SUCCESS';
 export const STATUS_ERROR = 'ERROR';
-export const STATUS_RESET = 'RESET';
 
 export const ACTION_FETCH = 'FETCH';
 export const ACTION_LIST = 'LIST';
-export const ACTION_POST = 'POST';
+export const ACTION_MUTATE = 'MUTATE';
+export const ACTION_RESET = 'RESET';
 
 export const ACTION_PUSH = 'PUSH';
 export const ACTION_POP = 'POP';

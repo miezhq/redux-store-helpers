@@ -31,7 +31,7 @@ export default (state = INITIAL_STATE, action = {}) => {
   const actionTypeRegExp =
     new RegExp('@([A-Z0-9_]+)\/' + // eslint-disable-line
       `(${actionTypes.join('|')})` +
-      '\_([A-Z\_]+)_'); // eslint-disable-line
+      '\_([A-Z\_]+)'); // eslint-disable-line
 
   const matchResult = type.match(actionTypeRegExp);
 
@@ -43,7 +43,7 @@ export default (state = INITIAL_STATE, action = {}) => {
       identifier,
     ] = matchResult;
 
-    const storePath = [camelCase(namespace), camelCase(identifier), constants.RESOURCE_TYPE_DATA];
+    const storePath = [camelCase(namespace), camelCase(identifier)];
 
     return actionHandlersMap[actionType](state, storePath, payload);
   }

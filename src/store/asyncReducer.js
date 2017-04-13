@@ -4,20 +4,27 @@ import * as constants from './constants';
 
 const INITIAL_STATE = immutable.Map({});
 
-const actionTypeMapping = {
-  [constants.ACTION_FETCH]: constants.RESOURCE_TYPE_ITEM,
-  [constants.ACTION_LIST]: constants.RESOURCE_TYPE_LIST,
-  [constants.ACTION_POST]: constants.RESOURCE_TYPE_MUTATION_RESULT,
-};
-
 export default (state = INITIAL_STATE, action = {}) => {
   const { type, payload } = action;
 
+  const actionTypes = [
+    constants.ACTION_FETCH,
+    constants.ACTION_LIST,
+    constants.ACTION_MUTATE,
+    constants.ACTION_RESET,
+  ];
+
+  const statuses = [
+    constants.STATUS_SUCCESS,
+    constants.STATUS_ERROR,
+    constants.STATUS_START,
+  ];
+
   const actionTypeRegExp =
     new RegExp('@([A-Z0-9_]+)\/' + // eslint-disable-line
-      `(${constants.ACTION_FETCH}|${constants.ACTION_LIST}|${constants.ACTION_POST})` +
+      `(${actionTypes.join('|')})` +
       '\_([A-Z\_]+)_' + // eslint-disable-line
-      `(${constants.STATUS_SUCCESS}|${constants.STATUS_ERROR}|${constants.STATUS_START})`);
+      `(${statuses.join('|')})`);
 
   const matchResult = type.match(actionTypeRegExp);
 
@@ -32,8 +39,12 @@ export default (state = INITIAL_STATE, action = {}) => {
 
     const storePath = [camelCase(namespace), camelCase(identifier)];
 
-    if (actionTypeMapping[actionType]) {
-      storePath.push(actionTypeMapping[actionType]);
+    if (actionType === constants.ACTION_RESET) {
+      return state.setIn(storePath, {
+        [constants.PROPERTY_STATUS]: null,
+        [constants.PROPERTY_TIMESTAMP]: new Date(),
+        [constants.PROPERTY_DATA]: undefined,
+      });
     }
 
     if (status === constants.STATUS_START) {
@@ -57,14 +68,6 @@ export default (state = INITIAL_STATE, action = {}) => {
         [constants.PROPERTY_TIMESTAMP]: new Date(),
         [constants.PROPERTY_DATA]: undefined,
         [constants.PROPERTY_ERROR]: payload,
-      });
-    }
-
-    if (status === constants.STATUS_RESET) {
-      return state.setIn(storePath, {
-        [constants.PROPERTY_STATUS]: null,
-        [constants.PROPERTY_TIMESTAMP]: new Date(),
-        [constants.PROPERTY_DATA]: undefined,
       });
     }
   }
