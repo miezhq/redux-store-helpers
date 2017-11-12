@@ -1,30 +1,33 @@
-import immutable from 'immutable';
+import { Map } from 'immutable';
 import { camelCase } from 'lodash';
-import * as constants from './constants';
+import { ACTION_TYPE_LITERALS } from '../../ActionTypes';
+import * as constants from '../../constants';
+import { STATUS_LITERALS } from '../../async/Statuses';
+import { Action } from '../../Action';
 
-const INITIAL_STATE = immutable.Map({});
+const INITIAL_STATE = Map<string, any>();
 
-export default (state = INITIAL_STATE, action = {}) => {
+const ASYNC_ACTION_TYPES: string[] = [
+  ACTION_TYPE_LITERALS.FETCH,
+  ACTION_TYPE_LITERALS.LIST,
+  ACTION_TYPE_LITERALS.MUTATE,
+  ACTION_TYPE_LITERALS.RESET,
+];
+
+const STATUSES: string[] = [
+  STATUS_LITERALS.START,
+  STATUS_LITERALS.SUCCESS,
+  STATUS_LITERALS.ERROR,
+];
+
+export default (state = INITIAL_STATE, action: Action) => {
   const { type, payload } = action;
-
-  const actionTypes = [
-    constants.ACTION_FETCH,
-    constants.ACTION_LIST,
-    constants.ACTION_MUTATE,
-    constants.ACTION_RESET,
-  ];
-
-  const statuses = [
-    constants.STATUS_SUCCESS,
-    constants.STATUS_ERROR,
-    constants.STATUS_START,
-  ];
 
   const actionTypeRegExp =
     new RegExp('@([A-Z0-9_]+)\/' + // eslint-disable-line
-      `(${actionTypes.join('|')})` +
+      `(${ASYNC_ACTION_TYPES.join('|')})` +
       '\_([A-Z\_]+)_' + // eslint-disable-line
-      `(${statuses.join('|')})`);
+      `(${STATUSES.join('|')})`);
 
   const matchResult = type.match(actionTypeRegExp);
 
@@ -39,7 +42,7 @@ export default (state = INITIAL_STATE, action = {}) => {
 
     const storePath = [camelCase(namespace), camelCase(identifier)];
 
-    if (actionType === constants.ACTION_RESET) {
+    if (actionType === ACTION_TYPE_LITERALS.RESET) {
       return state.setIn(storePath, {
         [constants.PROPERTY_STATUS]: null,
         [constants.PROPERTY_TIMESTAMP]: new Date(),
@@ -47,22 +50,23 @@ export default (state = INITIAL_STATE, action = {}) => {
       });
     }
 
-    if (status === constants.STATUS_START) {
+    if (status === STATUS_LITERALS.START) {
       return state.mergeIn(storePath, {
         [constants.PROPERTY_STATUS]: constants.ACTION_STATUS_RUNNING,
         [constants.PROPERTY_TIMESTAMP]: new Date(),
       });
     }
 
-    if (status === constants.STATUS_SUCCESS) {
+    if (status === STATUS_LITERALS.SUCCESS) {
       return state.mergeIn(storePath, {
         [constants.PROPERTY_STATUS]: constants.ACTION_STATUS_DONE,
         [constants.PROPERTY_TIMESTAMP]: new Date(),
         [constants.PROPERTY_DATA]: payload,
+        [constants.PROPERTY_ERROR]: undefined,
       });
     }
 
-    if (status === constants.STATUS_ERROR) {
+    if (status === STATUS_LITERALS.ERROR) {
       return state.mergeIn(storePath, {
         [constants.PROPERTY_STATUS]: constants.ACTION_STATUS_FAILED,
         [constants.PROPERTY_TIMESTAMP]: new Date(),
